@@ -135,7 +135,7 @@ if __name__ == "__main__":
     login(driver=driver)
     orders = get_orders_list(driver=driver)
     for order in orders:
-        order["items"] = get_order_items(order_url=order["url"])
+        order["items"] = get_order_items(driver=driver, order_url=order["url"])
     driver.quit()
     
     # Output
