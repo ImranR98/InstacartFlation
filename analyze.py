@@ -123,8 +123,21 @@ if __name__ == "__main__":
             print("No price fluctuation data available.")
     else:
         report_csv="\"Product Name\",\"Unit Description\",\"Total Units Ordered\",\"Average Units Per Month\",\"Average Units Per Order\",\"Price Fluctuations\""
+        results = []
         for item in unique_items:
             total_units_ordered, average_units_per_month, average_units_per_order, price_changes = analyze_item((item[0], item[1]))
+            results.append((item[0], item[1], total_units_ordered, average_units_per_month, average_units_per_order, price_changes))
+        results = sorted(
+            results,
+            key=cmp_to_key(lambda r1, r2: r2[3] - r1[3]) # For the report, sort by units per month descending
+        )
+        for result in results:
+            item_name = result[0].replace('"', '')
+            item_unit_description = result[1].replace('"', '')
+            total_units_ordered = result[2]
+            average_units_per_month = result[3]
+            average_units_per_order = result[4]
+            price_changes = result[5]
             price_change_string = ""
             if price_changes:
                 for change in price_changes:
@@ -134,10 +147,8 @@ if __name__ == "__main__":
                         price_change_string += f"+${change[1]:.2f} on {change[0]}"
                     else:
                         price_change_string += f"-${-change[1]:.2f} on {change[0]}"
-            report_csv += f"\n\"{item[0].replace('"', '')}\", \"{item[1].replace('"', '')}\", \"{total_units_ordered}\", \"{average_units_per_month}\", \"{average_units_per_order}\", \"{price_change_string}\""
+            report_csv += f"\n\"{item_name}\", \"{item_unit_description}\", \"{total_units_ordered}\", \"{average_units_per_month}\", \"{average_units_per_order}\", \"{price_change_string}\""
         output_file = f"{file_path}.analysis.csv"
         with open(output_file, 'w') as f:
             f.write(report_csv)
         print(f"Report saved: {output_file}")
-# TODO: Instead of picking one item at a time, calculate everything and save it as an easy to read CSV (in the same dir as the input JSON).
-# The product selection mode could still be accessible through an argument
