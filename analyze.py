@@ -55,7 +55,7 @@ def main(file_path):
     )
 
     # Display the ordered list of unique items
-    print("List of unique items (ordered by string similarity):")
+    print("List of unique items (ordered by similarity):")
     for index, item in enumerate(unique_items, start=1):
         print(f"{index}. {item[0]} - {item[1]}")
 
@@ -91,7 +91,7 @@ def main(file_path):
             else:
                 print(f"- Price decreased by ${-change[1]:.2f} on {change[0]}")
     else:
-        print("No price fluctuations data available.")
+        print("No price fluctuation data available.")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
