@@ -1,6 +1,7 @@
 import json
 import sys
 import re
+import argparse
 from collections import defaultdict
 from datetime import datetime
 from statistics import mean
@@ -21,7 +22,18 @@ def trim_common_prefix_word(string1, string2):
     trimmed_string2 = ' '.join(words2[prefix_length:])
     return common_prefix, trimmed_string1, trimmed_string2
 
-def main(file_path):
+if __name__ == "__main__":
+    # Validate arguments
+    selection_mode=False
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file_path', metavar='file_path', type=str, nargs='?', help='Input file path')
+    parser.add_argument('--select', action='store_true', help='If defined, show a single-product selection menu and print the results instead of saving to CSV')
+    args = parser.parse_args()
+    if args.select:
+        selection_mode = args.select
+    if args.file_path:
+        file_path = args.file_path
+
     # Read the JSON file
     with open(file_path, 'r') as file:
         orders = json.load(file)
@@ -30,6 +42,8 @@ def main(file_path):
     item_info = defaultdict(list)
     item_prices = defaultdict(list)    
     for order in orders:
+        if order["cancelled"] is True:
+            continue
         for item in order['items']:
             item_identifier = (item['name'], item['unitDescription'])
             item_info[item_identifier].append(float(re.sub(r'[^0-9.]', '', item['quantity'])))
@@ -54,52 +68,66 @@ def main(file_path):
         key=cmp_to_key(lambda item1, item2: fuzz.partial_ratio(item1[2], item2[2]))
     )
 
-    # Display the ordered list of unique items
-    print("List of unique items (ordered by similarity):")
-    for index, item in enumerate(unique_items, start=1):
-        print(f"{index}. {item[0]} - {item[1]}")
+    def analyze_item(selected_item):
+        # Calculate total units ordered
+        total_units_ordered = sum(item_info[selected_item])
 
-    # Choose an item
-    item_choice = int(input("Select an item by entering its number: ")) - 1
-    selected_item = (unique_items[item_choice][0], unique_items[item_choice][1])
+        # Calculate average units per month
+        order_dates = [datetime.strptime(order['dateTime'], '%Y-%m-%d %H:%M') for order in orders]
+        months_diff = (max(order_dates).year - min(order_dates).year) * 12 + max(order_dates).month - min(order_dates).month
+        average_units_per_month = total_units_ordered / months_diff
 
-    # Calculate total units ordered
-    total_units_ordered = sum(item_info[selected_item])
+        # Calculate average units per order
+        average_units_per_order = total_units_ordered / len(orders)
 
-    # Calculate average units per month
-    order_dates = [datetime.strptime(order['dateTime'], '%Y-%m-%d %H:%M') for order in orders]
-    months_diff = (max(order_dates).year - min(order_dates).year) * 12 + max(order_dates).month - min(order_dates).month
-    average_units_per_month = total_units_ordered / months_diff
+        # Calculate price fluctuations
+        prices = item_prices[selected_item]
+        price_changes = [(prices[i][0], prices[i][1] - prices[i - 1][1]) for i in range(1, len(prices)) if prices[i][1] != prices[i - 1][1]]
+        return total_units_ordered, average_units_per_month, average_units_per_order, price_changes
 
-    # Calculate average units per order
-    total_orders = len(orders)
-    average_units_per_order = total_units_ordered / total_orders
+    if (selection_mode):
+        # Display the ordered list of unique items
+        print("List of unique items (ordered by similarity):")
+        for index, item in enumerate(unique_items, start=1):
+            print(f"{index}. {item[0]} - {item[1]}")
 
-    # Calculate price fluctuations
-    prices = item_prices[selected_item]
-    price_changes = [(prices[i][0], prices[i][1] - prices[i - 1][1]) for i in range(1, len(prices)) if prices[i][1] != prices[i - 1][1]]
+        # Choose an item
+        item_choice = int(input("Select an item by entering its number: ")) - 1
+        selected_item = (unique_items[item_choice][0], unique_items[item_choice][1])
 
-    # Print results
-    print(f"\n{selected_item[0]} - {selected_item[1]}:")
-    print(f"    Total units ordered: {total_units_ordered}")
-    print(f"    Average units per month: {average_units_per_month:.2f}")
-    print(f"    Average units per order: {average_units_per_order:.2f}")
-    if price_changes:
-        print("    Price fluctuations:")
-        for change in price_changes:
-            if change[1] > 0:
-                print(f"        +${change[1]:.2f} on {change[0]}")
-            else:
-                print(f"        -${-change[1]:.2f} on {change[0]}")
+        total_units_ordered, average_units_per_month, average_units_per_order, price_changes = analyze_item(selected_item=selected_item)
+
+        # Print results
+        print(f"\n{selected_item[0]} - {selected_item[1]}:")
+        print(f"    Total units ordered: {total_units_ordered}")
+        print(f"    Average units per month: {average_units_per_month:.2f}")
+        print(f"    Average units per order: {average_units_per_order:.2f}")
+        if price_changes:
+            print("    Price fluctuations:")
+            for change in price_changes:
+                if change[1] > 0:
+                    print(f"        +${change[1]:.2f} on {change[0]}")
+                else:
+                    print(f"        -${-change[1]:.2f} on {change[0]}")
+        else:
+            print("No price fluctuation data available.")
     else:
-        print("No price fluctuation data available.")
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python script_name.py <file_path>")
-        sys.exit(1)
-    file_path = sys.argv[1]
-    main(file_path)
-
+        report_csv="\"Product Name\",\"Unit Description\",\"Total Units Ordered\",\"Average Units Per Month\",\"Average Units Per Order\",\"Price Fluctuations\""
+        for item in unique_items:
+            total_units_ordered, average_units_per_month, average_units_per_order, price_changes = analyze_item((item[0], item[1]))
+            price_change_string = ""
+            if price_changes:
+                for change in price_changes:
+                    if len(price_change_string) > 0:
+                        price_change_string += ", "
+                    if change[1] > 0:
+                        price_change_string += f"+${change[1]:.2f} on {change[0]}"
+                    else:
+                        price_change_string += f"-${-change[1]:.2f} on {change[0]}"
+            report_csv += f"\n\"{item[0]}\", \"{item[1]}\", \"{total_units_ordered}\", \"{average_units_per_month}\", \"{average_units_per_order}\", \"{price_change_string}\""
+        output_file = f"{file_path}.analysis.csv"
+        with open(output_file, 'w') as f:
+            f.write(report_csv)
+        print(f"Report saved: {output_file}")
 # TODO: Instead of picking one item at a time, calculate everything and save it as an easy to read CSV (in the same dir as the input JSON).
 # The product selection mode could still be accessible through an argument
