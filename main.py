@@ -14,18 +14,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC\
 
-# Parse an output file argument if any
-output_path=""
-after_str=None
-parser = argparse.ArgumentParser()
-parser.add_argument('--output', help='Where to save the output JSON')
-parser.add_argument('--after', help='A \'Y-m-d-H-M\' string to filter out orders older than a certain date/time')
-args = parser.parse_args()
-if args.output:
-    output_path = args.output
-if args.after:
-    after_str = args.after
-
 # Function to get the screen width and height
 def get_screen_dimensions():
     root = tk.Tk()
@@ -42,7 +30,7 @@ def convert_datetime(input_string):
 
 # Return true if the second date (of format '2024-01-30 18:23') is greater than the first one (of format '2024-01-30-18-23').
 def is_web_date_greater(date_str_from_arg, date_str_from_web):
-    format_a = '%Y-%m-%d-%H-%M'
+    format_a = '%Y-%m-%d %H:%M'
     format_b = '%Y-%m-%d %H:%M'
     date_a = datetime.strptime(date_str_from_arg, format_a)
     date_b = datetime.strptime(date_str_from_web, format_b)
@@ -76,6 +64,7 @@ def get_orders_list(driver: webdriver.Chrome, after_str=None):
     items = list(map(order_info_div_to_dict, driver.find_elements(By.XPATH, "//li[@data-radium='true']/div[1]")))
     if after_str is not None:
         items = list(filter(lambda x: is_web_date_greater(after_str, x["dateTime"]), items))
+    items.reverse() # Oldest first
     return items
 
 # Function to find and click the "load more orders" button
@@ -141,7 +130,32 @@ def item_info_div_to_dict(item_info_div):
 
 # Main function
 if __name__ == "__main__":
-    # Setup
+    # Validate arguments
+    output_path=""
+    after_str=None
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', help='Where to save the output (can be an existing file for incremental scraping)')
+    parser.add_argument('--after', help='A \'Y-m-d H:M\' string to filter out orders older than a certain date/time')
+    args = parser.parse_args()
+    if args.file:
+        output_path = args.file
+    if args.after:
+        after_str = args.after
+
+    # Grab existing data if any and ensure you don't repeat orders
+    existing_orders=[]
+    if (output_path):
+        if os.path.exists(output_path):
+            with open(output_path, 'r') as file:
+                json_array = json.load(file)
+                existing_orders += json_array
+    if (len(existing_orders) > 0):
+        if after_str is not None:
+            raise "You cant use the '--after' argment with an existing orders list!"
+        after_str = existing_orders[len(existing_orders) - 1]["dateTime"]
+        print("You have pointed to an existing orders list. Only orders after " + after_str + " will be scraped.")
+
+    # Setup Webdriver and load env. vars.
     load_dotenv()
     screen_width, screen_height = get_screen_dimensions()
     window_width = screen_width // 2
@@ -160,7 +174,7 @@ if __name__ == "__main__":
         renderer="Intel Iris OpenGL Engine",
         fix_hairline=True,
         )
-    
+
     # Scrape data
     login(driver=driver)
     time.sleep(random.randint(5, 15))
@@ -171,7 +185,8 @@ if __name__ == "__main__":
         order["items"] = order_details["items"]
         order["delivery_photo_url"] = order_details["delivery_photo_url"]
     driver.quit()
-    
+    orders = existing_orders + orders
+
     # Output
     report = json.dumps(orders, indent=4)
     print(report)
