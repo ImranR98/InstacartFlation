@@ -80,16 +80,17 @@ def main(file_path):
     price_changes = [(prices[i][0], prices[i][1] - prices[i - 1][1]) for i in range(1, len(prices)) if prices[i][1] != prices[i - 1][1]]
 
     # Print results
-    print(f"\nYou have ordered {total_units_ordered} units of {selected_item[0]} - {selected_item[1]}.")
-    print(f"Average units per month: {average_units_per_month:.2f}")
-    print(f"Average units per order: {average_units_per_order:.2f}")
+    print(f"\n{selected_item[0]} - {selected_item[1]}:")
+    print(f"    Total units ordered: {total_units_ordered}")
+    print(f"    Average units per month: {average_units_per_month:.2f}")
+    print(f"    Average units per order: {average_units_per_order:.2f}")
     if price_changes:
-        print("Price fluctuations:")
+        print("    Price fluctuations:")
         for change in price_changes:
             if change[1] > 0:
-                print(f"- Price increased by ${change[1]:.2f} on {change[0]}")
+                print(f"        +${change[1]:.2f} on {change[0]}")
             else:
-                print(f"- Price decreased by ${-change[1]:.2f} on {change[0]}")
+                print(f"        -${-change[1]:.2f} on {change[0]}")
     else:
         print("No price fluctuation data available.")
 
@@ -99,3 +100,6 @@ if __name__ == "__main__":
         sys.exit(1)
     file_path = sys.argv[1]
     main(file_path)
+
+# TODO: Instead of picking one item at a time, calculate everything and save it as an easy to read CSV (in the same dir as the input JSON).
+# The product selection mode could still be accessible through an argument
