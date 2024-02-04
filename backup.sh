@@ -18,7 +18,7 @@ if [ -n "$COPY_DELIVERY_PHOTOS_TO" ] && [ ! -d "$COPY_DELIVERY_PHOTOS_TO" ]; the
 fi
 
 python "$SCRIPT_DIR"/main.py --file "$SAVE_DIR"/instacart_orders.json
-node "$SCRIPT_DIR"/downloadImages.js "$SAVE_DIR"
+node "$SCRIPT_DIR"/downloadImages.js "$SAVE_DIR"/instacart_orders.json
 
 if [ -n "$COPY_DELIVERY_PHOTOS_TO" ]; then
     TEMP_DIR="$(mktemp -d)"
