@@ -16,11 +16,15 @@ from selenium.webdriver.support import expected_conditions as EC\
 
 # Parse an output file argument if any
 output_path=""
+after_str=None
 parser = argparse.ArgumentParser()
 parser.add_argument('--output', help='Where to save the output JSON')
+parser.add_argument('--after', help='A \'Y-m-d-H-M\' string to filter out orders older than a certain date/time')
 args = parser.parse_args()
 if args.output:
     output_path = args.output
+if args.after:
+    after_str = args.after
 
 # Function to get the screen width and height
 def get_screen_dimensions():
@@ -36,6 +40,17 @@ def convert_datetime(input_string):
     output_string = input_datetime.strftime('%Y-%m-%d %H:%M')
     return output_string
 
+# Return true if the second date (of format '2024-01-30 18:23') is greater than the first one (of format '2024-01-30-18-23').
+def is_web_date_greater(date_str_from_arg, date_str_from_web):
+    format_a = '%Y-%m-%d-%H-%M'
+    format_b = '%Y-%m-%d %H:%M'
+    date_a = datetime.strptime(date_str_from_arg, format_a)
+    date_b = datetime.strptime(date_str_from_web, format_b)
+    if date_b > date_a:
+        return True
+    else:
+        return False
+
 def login(driver: webdriver.Chrome):
     driver.get("https://www.instacart.ca/store/account")
     email = os.getenv("INSTACART_EMAIL")
@@ -49,14 +64,19 @@ def login(driver: webdriver.Chrome):
         login_button.click()
     WebDriverWait(driver, 3600).until(EC.url_changes(driver.current_url)) # Long timeout needed for manual login or occasional CAPTCHA
 
-def get_orders_list(driver: webdriver.Chrome):
+def get_orders_list(driver: webdriver.Chrome, after_str=None):
     driver.get("https://www.instacart.ca/store/account/orders")
-    # Keep clicking "load more orders" until no more can be loaded
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    # Keep clicking "load more orders" until no more can be loaded    
     while click_load_more():
-        pass
+        if after_str is not None:
+            last_item_date = order_info_div_to_dict(driver.find_elements(By.XPATH, "//li[@data-radium='true']/div[1]").pop())["dateTime"]
+            if not is_web_date_greater(after_str, last_item_date):
+                break
     # Find all 'li' elements with 'data-radium' attribute equal to 'true' and save their inner HTML to an array
-    return list(map(order_info_div_to_dict, driver.find_elements(By.XPATH, "//li[@data-radium='true']/div[1]")))
+    items = list(map(order_info_div_to_dict, driver.find_elements(By.XPATH, "//li[@data-radium='true']/div[1]")))
+    if after_str is not None:
+        items = list(filter(lambda x: is_web_date_greater(after_str, x["dateTime"]), items))
+    return items
 
 # Function to find and click the "load more orders" button
 def click_load_more():
@@ -144,7 +164,7 @@ if __name__ == "__main__":
     # Scrape data
     login(driver=driver)
     time.sleep(random.randint(5, 15))
-    orders = get_orders_list(driver=driver)
+    orders = get_orders_list(driver=driver, after_str=after_str)
     for order in orders:
         time.sleep(random.randint(5, 15)) # Helps with bot detection
         order_details = get_order_details(driver=driver, order_url=order["url"])

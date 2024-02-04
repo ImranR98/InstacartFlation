@@ -25,3 +25,4 @@ The data scraped includes:
    - Note that even with these variables defined, you may still need to manually solve the occasional [CAPTCHA](https://en.wikipedia.org/wiki/CAPTCHA).
 5. Run the script: `python main.py`
    - The output is printed to the terminal; if you would like to also save it to a file, use the `--output` argument with a valid file path.
+   - You can use the `--after` argument to only include orders after a certain date/time (format is `%Y-%m-%d-%H-%M`).
