@@ -48,17 +48,23 @@ const main = async () => {
     mkdirIfNotExists(productsDir)
     for (let i in orders) {
         if (orders[i].deliveryPhotoUrl) {
-            downloadImage(
-                orders[i].deliveryPhotoUrl,
-                `${deliveriesDir}/${orders[i].dateTime.split(' ').join(':').split(':').join('-')}.${path.extname(orders[i].deliveryPhotoUrl)}`
-            )
+            const toDl = `${deliveriesDir}/${orders[i].dateTime.split(' ').join(':').split(':').join('-')}.${path.extname(orders[i].deliveryPhotoUrl)}`
+            if (!fs.existsSync(toDl)) {
+                downloadImage(
+                    orders[i].deliveryPhotoUrl,
+                    `${deliveriesDir}/${orders[i].dateTime.split(' ').join(':').split(':').join('-')}.${path.extname(orders[i].deliveryPhotoUrl)}`
+                )
+            }
         }
         for (let j in orders[i].items) {
             if (orders[i].items[j].thumbnailUrl) {
-                downloadImage(
-                    orders[i].items[j].thumbnailUrl,
-                    `${productsDir}/${path.basename(orders[i].items[j].thumbnailUrl)}`
-                )
+                const toDl = `${productsDir}/${path.basename(orders[i].items[j].thumbnailUrl)}`
+                if (!fs.existsSync(toDl)) {
+                    downloadImage(
+                        orders[i].items[j].thumbnailUrl,
+
+                    )
+                }
             }
         }
     }
