@@ -25,25 +25,35 @@ def trim_common_prefix_word(string1, string2):
 if __name__ == "__main__":
     # Validate arguments
     selection_mode=False
+    after_date=None
     parser = argparse.ArgumentParser()
     parser.add_argument('file_path', metavar='file_path', type=str, nargs='?', help='Input file path')
     parser.add_argument('--select', action='store_true', help='If defined, show a single-product selection menu and print the results instead of saving to CSV')
+    parser.add_argument('--after', help='A \'Y-m-d H:M\' string to filter out orders older than a certain date/time')
     args = parser.parse_args()
     if args.select:
         selection_mode = args.select
     if args.file_path:
         file_path = args.file_path
+    if args.after:
+        after_date = datetime.strptime(args.after, '%Y-%m-%d %H:%M')
 
     # Read the JSON file
     with open(file_path, 'r') as file:
-        orders = json.load(file)
+        original_orders = json.load(file)
 
     # Extract item information from orders
     item_info = defaultdict(list)
-    item_prices = defaultdict(list)    
-    for order in orders:
+    item_prices = defaultdict(list)
+    orders = []
+    for order in original_orders:
         if order["cancelled"] is True:
             continue
+        if after_date is not None:
+            if datetime.strptime(order['dateTime'], '%Y-%m-%d %H:%M') <= after_date:
+                continue
+        orders.append(order)
+    for order in orders:
         for item in order['items']:
             item_identifier = (item['name'], item['unitDescription'])
             item_info[item_identifier].append(float(re.sub(r'[^0-9.]', '', item['quantity'])))
@@ -75,6 +85,7 @@ if __name__ == "__main__":
         # Calculate average units per month
         order_dates = [datetime.strptime(order['dateTime'], '%Y-%m-%d %H:%M') for order in orders]
         months_diff = (max(order_dates).year - min(order_dates).year) * 12 + max(order_dates).month - min(order_dates).month
+        print(months_diff)
         average_units_per_month = total_units_ordered / months_diff
 
         # Calculate average units per order
@@ -124,7 +135,7 @@ if __name__ == "__main__":
                         price_change_string += f"+${change[1]:.2f} on {change[0]}"
                     else:
                         price_change_string += f"-${-change[1]:.2f} on {change[0]}"
-            report_csv += f"\n\"{item[0]}\", \"{item[1]}\", \"{total_units_ordered}\", \"{average_units_per_month}\", \"{average_units_per_order}\", \"{price_change_string}\""
+            report_csv += f"\n\"{item[0].replace('"', '')}\", \"{item[1].replace('"', '')}\", \"{total_units_ordered}\", \"{average_units_per_month}\", \"{average_units_per_order}\", \"{price_change_string}\""
         output_file = f"{file_path}.analysis.csv"
         with open(output_file, 'w') as f:
             f.write(report_csv)
