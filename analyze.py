@@ -85,7 +85,6 @@ if __name__ == "__main__":
         # Calculate average units per month
         order_dates = [datetime.strptime(order['dateTime'], '%Y-%m-%d %H:%M') for order in orders]
         months_diff = (max(order_dates).year - min(order_dates).year) * 12 + max(order_dates).month - min(order_dates).month
-        print(months_diff)
         average_units_per_month = total_units_ordered / months_diff
 
         # Calculate average units per order
