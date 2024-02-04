@@ -125,7 +125,7 @@ def item_info_div_to_dict(item_info_div):
         "unitPrice": item_unit_price,
         "unitDescription": item_unit_description,
         "quantity": item_quantity,
-        "thumbail_url": item_thumbnail_url
+        "thumbnailUrl": item_thumbnail_url
     }
 
 # Main function
@@ -183,7 +183,7 @@ if __name__ == "__main__":
         time.sleep(random.randint(5, 15)) # Helps with bot detection
         order_details = get_order_details(driver=driver, order_url=order["url"])
         order["items"] = order_details["items"]
-        order["delivery_photo_url"] = order_details["delivery_photo_url"]
+        order["deliveryPhotoUrl"] = order_details["delivery_photo_url"]
     driver.quit()
     orders = existing_orders + orders
 
