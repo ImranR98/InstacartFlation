@@ -7,6 +7,7 @@ The data scraped includes:
 - Number of unique items
 - Order total
 - Whether the order was cancelled
+- The delivery photo URL (if any)
 - The list of items, where the data for each item includes:
   - Item name
   - Item unit price

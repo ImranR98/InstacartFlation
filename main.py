@@ -88,13 +88,21 @@ def order_info_div_to_dict(order_info_div):
         "cancelled": cancelled
     }
 
-def get_order_items(driver: webdriver.Chrome, order_url: str):
+def get_order_details(driver: webdriver.Chrome, order_url: str):
     driver.get(order_url)
     show_items_button = WebDriverWait(driver, 3600).until( # A very long wait to allow CloudFlare bot detection time to finish
         EC.element_to_be_clickable((By.ID, "order-status-items-card"))
     )
     show_items_button.click()
-    return list(map(item_info_div_to_dict, driver.find_elements(By.XPATH, "//div[@id='items-card-expanded']/ul/li/div")))
+    delivery_photo_url = None
+    try:
+        delivery_photo_url = driver.find_element(By.XPATH, "//img[contains(@src, 'orderdeliveryphoto')]").get_attribute("src")
+    except:
+        pass
+    return {
+        "delivery_photo_url": delivery_photo_url,
+        "items": list(map(item_info_div_to_dict, driver.find_elements(By.XPATH, "//div[@id='items-card-expanded']/ul/li/div")))
+    }
 
 def item_info_div_to_dict(item_info_div):
     item_thumbnail_url = item_info_div.find_element(By.XPATH, "./div[1]/button/span/img").get_attribute("src")
@@ -139,7 +147,9 @@ if __name__ == "__main__":
     orders = get_orders_list(driver=driver)
     for order in orders:
         time.sleep(random.randint(5, 15)) # Helps with bot detection
-        order["items"] = get_order_items(driver=driver, order_url=order["url"])
+        order_details = get_order_details(driver=driver, order_url=order["url"])
+        order["items"] = order_details["items"]
+        order["delivery_photo_url"] = order_details["delivery_photo_url"]
     driver.quit()
     
     # Output
