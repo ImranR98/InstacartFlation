@@ -71,12 +71,19 @@ def order_info_div_to_dict(order_info_div):
     order_url = order_info_div.find_element(By.XPATH, "./a").get_attribute("href")
     order_date_text = convert_datetime(order_info_div.find_element(By.XPATH, "./div/div[1]/p[2]").text)
     order_item_count_text = order_info_div.find_element(By.XPATH, "./div/div[2]/p[2]").text
+    cancelled = False
+    try:
+        order_info_div.find_element(By.XPATH, "./div/div[1]/p[3]").text
+        cancelled = True
+    except:
+        pass
     order_total_text = order_info_div.find_element(By.XPATH, "./div/div[3]/p[2]").text[1:]
     return {
         "dateTime": order_date_text,
         "itemCount": order_item_count_text,
         "total": order_total_text,
-        "url": order_url
+        "url": order_url,
+        "cancelled": cancelled
     }
 
 def get_order_items(driver: webdriver.Chrome, order_url: str):
@@ -128,7 +135,7 @@ if __name__ == "__main__":
     login(driver=driver)
     orders = get_orders_list(driver=driver)
     for order in orders:
-        order["items"] = get_order_items(order["url"])
+        order["items"] = get_order_items(order_url=order["url"])
     driver.quit()
     
     # Output

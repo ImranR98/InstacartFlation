@@ -6,6 +6,7 @@ The data scraped includes:
 - Order date
 - Number of unique items
 - Order total
+- Whether the order was cancelled
 - The list of items, where the data for each item includes:
   - Item name
   - Item unit price
