@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 import tkinter as tk
 from datetime import datetime
 import argparse
+import random
+import time
 
 from selenium import webdriver
 from selenium_stealth import stealth
@@ -88,7 +90,7 @@ def order_info_div_to_dict(order_info_div):
 
 def get_order_items(driver: webdriver.Chrome, order_url: str):
     driver.get(order_url)
-    show_items_button = WebDriverWait(driver, 10).until(
+    show_items_button = WebDriverWait(driver, 3600).until( # A very long wait to allow CloudFlare bot detection time to finish
         EC.element_to_be_clickable((By.ID, "order-status-items-card"))
     )
     show_items_button.click()
@@ -133,8 +135,10 @@ if __name__ == "__main__":
     
     # Scrape data
     login(driver=driver)
+    time.sleep(random.randint(5, 15))
     orders = get_orders_list(driver=driver)
     for order in orders:
+        time.sleep(random.randint(5, 15)) # Helps with bot detection
         order["items"] = get_order_items(driver=driver, order_url=order["url"])
     driver.quit()
     
