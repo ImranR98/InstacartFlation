@@ -22,9 +22,16 @@ def get_screen_dimensions():
     root.destroy()
     return screen_width, screen_height
 
-# Convert a date/time string from 'Jan 30, 2024, 6:23 PM' format to '2024-01-30 18:23' format.
+# Convert a date/time string from 'Jan 30' or 'Jan 30, 2024' format to '2024-01-30 00:00' format.
 def convert_datetime(input_string):
-    input_datetime = datetime.strptime(input_string, '%b %d, %Y, %I:%M %p')
+    current_year = datetime.now().year
+    if ',' in input_string:
+        date_format = '%b %d, %Y'
+    else:
+        date_format = '%b %d'
+        input_string += f", {current_year}"  # Add the current year
+    input_datetime = datetime.strptime(input_string, date_format)
+    # input_datetime = datetime.strptime(input_string, '%b %d, %Y, %I:%M %p') // For old format that includes time
     output_string = input_datetime.strftime('%Y-%m-%d %H:%M')
     return output_string
 
@@ -57,7 +64,7 @@ def get_orders_list(driver: webdriver.Chrome, after_str=None):
     # Keep clicking "load more orders" until no more can be loaded    
     while click_load_more():
         if after_str is not None:
-            last_item_date = order_info_div_to_dict(driver.find_elements(By.XPATH, "//li[@data-radium='true']/div[1]").pop())["dateTime"]
+            last_item_date = order_info_div_to_dict(driver.find_elements(By.XPATH, "//div[@class=\"e-y9uokj\"]").pop())["dateTime"]
             if not is_web_date_greater(after_str, last_item_date):
                 break
     # Find all 'li' elements with 'data-radium' attribute equal to 'true' and save their inner HTML to an array
@@ -80,7 +87,7 @@ def click_load_more():
 
 def order_info_div_to_dict(order_info_div):
     order_url = order_info_div.find_element(By.XPATH, "./a").get_attribute("href")
-    order_date_text = convert_datetime(order_info_div.find_element(By.XPATH, "./div/div[1]/p[2]").text)
+    order_date_text = convert_datetime(' '.join(order_info_div.find_element(By.XPATH, "./div/div[1]/p[2]").text.split()[1:]))
     order_item_count_text = order_info_div.find_element(By.XPATH, "./div/div[2]/p[2]").text
     cancelled = False
     try:
