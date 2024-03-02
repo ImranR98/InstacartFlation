@@ -17,8 +17,12 @@ if [ -n "$COPY_DELIVERY_PHOTOS_TO" ] && [ ! -d "$COPY_DELIVERY_PHOTOS_TO" ]; the
     exit 1
 fi
 
+shift
+shift
+shift
+
 python "$SCRIPT_DIR"/main.py --file "$SAVE_DIR"/instacart_orders.json
-python "$SCRIPT_DIR"/analyze.py "$SAVE_DIR"/instacart_orders.json
+python "$SCRIPT_DIR"/analyze.py "$SAVE_DIR"/instacart_orders.json "$@"
 node "$SCRIPT_DIR"/downloadImages.js "$SAVE_DIR"/instacart_orders.json
 
 if [ -n "$COPY_DELIVERY_PHOTOS_TO" ]; then

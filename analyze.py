@@ -26,6 +26,7 @@ if __name__ == "__main__":
     # Validate arguments
     selection_mode=False
     after_date=None
+    after_date_message=''
     parser = argparse.ArgumentParser()
     parser.add_argument('file_path', metavar='file_path', type=str, nargs='?', help='Input file path')
     parser.add_argument('--select', action='store_true', help='If defined, show a single-product selection menu and print the results instead of saving to CSV')
@@ -37,6 +38,7 @@ if __name__ == "__main__":
         file_path = args.file_path
     if args.after:
         after_date = datetime.strptime(args.after, '%Y-%m-%d %H:%M')
+        after_date_message = f"(after {args.after})"
 
     # Read the JSON file
     with open(file_path, 'r') as file:
@@ -122,7 +124,7 @@ if __name__ == "__main__":
         else:
             print("No price fluctuation data available.")
     else:
-        report_csv="\"Product Name\",\"Unit Description\",\"Total Units Ordered\",\"Average Units Per Month\",\"Average Units Per Order\",\"Price Fluctuations\""
+        report_csv=f"\"Product Name{after_date_message}\",\"Unit Description\",\"Total Units Ordered\",\"Average Units Per Month\",\"Average Units Per Order\",\"Price Fluctuations\""
         results = []
         for item in unique_items:
             total_units_ordered, average_units_per_month, average_units_per_order, price_changes = analyze_item((item[0], item[1]))
