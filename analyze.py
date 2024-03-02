@@ -38,7 +38,7 @@ if __name__ == "__main__":
         file_path = args.file_path
     if args.after:
         after_date = datetime.strptime(args.after, '%Y-%m-%d %H:%M')
-        after_date_message = f"(after {args.after})"
+        after_date_message = f" (after {args.after})"
 
     # Read the JSON file
     with open(file_path, 'r') as file:
