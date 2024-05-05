@@ -25,10 +25,8 @@ def get_screen_dimensions():
 # Convert a date/time string from 'Jan 30' or 'Jan 30, 2024' format to '2024-01-30 00:00' format.
 def convert_datetime(input_string):
     current_year = datetime.now().year
-    if ',' in input_string:
-        date_format = '%b %d, %Y'
-    else:
-        date_format = '%b %d'
+    date_format = '%b %d, %Y'
+    if ',' not in input_string:
         input_string += f", {current_year}"  # Add the current year
     input_datetime = datetime.strptime(input_string, date_format)
     # input_datetime = datetime.strptime(input_string, '%b %d, %Y, %I:%M %p') // For old format that includes time
@@ -68,7 +66,7 @@ def get_orders_list(driver: webdriver.Chrome, after_str=None):
             if not is_web_date_greater(after_str, last_item_date):
                 break
     # Find all 'li' elements with 'data-radium' attribute equal to 'true' and save their inner HTML to an array
-    items = list(map(order_info_div_to_dict, driver.find_elements(By.XPATH, "//li[@data-radium='true']/div[1]")))
+    items = list(map(order_info_div_to_dict, driver.find_elements(By.XPATH, "//li/div[1]/div[1]/div[2]/a/../..")))
     if after_str is not None:
         items = list(filter(lambda x: is_web_date_greater(after_str, x["dateTime"]), items))
     items.reverse() # Oldest first
@@ -86,16 +84,18 @@ def click_load_more():
         return False
 
 def order_info_div_to_dict(order_info_div):
-    order_url = order_info_div.find_element(By.XPATH, "./a").get_attribute("href")
-    order_date_text = convert_datetime(' '.join(order_info_div.find_element(By.XPATH, "./div/div[1]/p[2]").text.split()[1:]))
-    order_item_count_text = order_info_div.find_element(By.XPATH, "./div/div[2]/p[2]").text
+    order_url_p = order_info_div.find_element(By.XPATH, "./div[2]/a")
+    order_url = order_url_p.get_attribute("href")
+    order_details_div = order_url_p.find_element(By.XPATH, '../../div[1]')
+    order_date_text = convert_datetime(' '.join(order_details_div.find_element(By.XPATH, "./div[1]/p[2]").text.split()[1:]))
+    order_item_count_text = order_details_div.find_element(By.XPATH, "./div[2]/p[2]").text
     cancelled = False
     try:
-        order_info_div.find_element(By.XPATH, "./div/div[1]/p[3]").text
+        order_details_div.find_element(By.XPATH, "./div[1]/p[3]").text
         cancelled = True
     except:
         pass
-    order_total_text = order_info_div.find_element(By.XPATH, "./div/div[3]/p[2]").text[1:]
+    order_total_text = order_details_div.find_element(By.XPATH, "./div[3]/p[2]").text[1:]
     return {
         "dateTime": order_date_text,
         "itemCount": order_item_count_text,

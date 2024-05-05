@@ -62,7 +62,7 @@ const main = async () => {
                 if (!fs.existsSync(toDl)) {
                     downloadImage(
                         orders[i].items[j].thumbnailUrl,
-
+                        `${productsDir}/${path.basename(orders[i].deliveryPhotoUrl)}`
                     )
                 }
             }
