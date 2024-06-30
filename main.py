@@ -6,6 +6,7 @@ from datetime import datetime
 import argparse
 import random
 import time
+import getpass
 
 from selenium import webdriver
 from selenium_stealth import stealth
@@ -47,7 +48,7 @@ def is_web_date_greater(date_str_from_arg, date_str_from_web):
 def login(driver: webdriver.Chrome):
     driver.get("https://www.instacart.ca/store/account")
     email = os.getenv("INSTACART_EMAIL")
-    if (email and password): # If not defined, you can login manually
+    if (email): # If not defined, you can login manually
         email_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Email']")))
         continue_button = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button/span[text()='Continue']")))
         email_input.send_keys(email)
