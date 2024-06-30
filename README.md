@@ -20,9 +20,9 @@ The data scraped includes:
 2. Ensure you have Chromium or Google Chrome installed.
 3. Ensure you have Chrome Webdriver installed and that it is compatible with the version of Chromium/Chrome you have.
    - On Linux, you can run `installChromeDriver.sh` to automatically install/update ChromeDriver in `/usr/local/bin`,
-4. Optionally, create a [`.env`](https://www.dotenv.org/docs/security/env.html) file with your Instacart credentials defined as `INSTACART_EMAIL` and `INSTACART_PASSWORD` (or ensure those environment variables are present in some other way).
-   - If you skip this, you will need to login manually when the script starts.
-   - Note that even with these variables defined, you may still need to manually solve the occasional [CAPTCHA](https://en.wikipedia.org/wiki/CAPTCHA).
+4. Optionally, create a [`.env`](https://www.dotenv.org/docs/security/env.html) file with your Instacart login email defined as `INSTACART_EMAIL` (or ensure that environment variable is present in some other way).
+   - You can skip this and enter the email manually when the script starts.
+   - Note that even with this variables defined, you will still need to complete the login manually.
 5. Run the script: `python main.py`
    - You can use the `--after` argument to only include orders after a certain date/time (format is `%Y-%m-%d %H:%M`).
    - The output is printed to the terminal; if you would like to also save it to a file, use the `--file` argument with a valid file path.

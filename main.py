@@ -47,15 +47,12 @@ def is_web_date_greater(date_str_from_arg, date_str_from_web):
 def login(driver: webdriver.Chrome):
     driver.get("https://www.instacart.ca/store/account")
     email = os.getenv("INSTACART_EMAIL")
-    password = os.getenv("INSTACART_PASSWORD")
     if (email and password): # If not defined, you can login manually
         email_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Email']")))
-        password_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Password']")))
-        login_button = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button/span[text()='Log in']")))
+        continue_button = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button/span[text()='Continue']")))
         email_input.send_keys(email)
-        password_input.send_keys(password)
-        login_button.click()
-    WebDriverWait(driver, 3600).until(EC.url_changes(driver.current_url)) # Long timeout needed for manual login or occasional CAPTCHA
+        continue_button.click()
+    WebDriverWait(driver, 3600).until(EC.url_changes(driver.current_url)) # Long timeout needed for the rest of the login process to be done manually
 
 def get_orders_list(driver: webdriver.Chrome, after_str=None):
     driver.get("https://www.instacart.ca/store/account/orders")
@@ -170,6 +167,12 @@ if __name__ == "__main__":
     options = webdriver.ChromeOptions()
     options.add_argument(f"window-size={window_width},{window_height}")
     options.add_argument(f"window-position={screen_width},0")
+    dataDir = f"/home/{getpass.getuser()}/.config/chromium"
+    if not os.path.isdir(dataDir):
+        dataDir = f"/home/{getpass.getuser()}/.config/google-chrome"
+    if os.path.isdir(dataDir):
+        options.add_argument(f"--user-data-dir={dataDir}")
+        options.add_argument(f"--profile-directory=Default")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
     driver = webdriver.Chrome(options=options)
