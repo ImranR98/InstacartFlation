@@ -47,6 +47,9 @@ def is_web_date_greater(date_str_from_arg, date_str_from_web):
 
 def login(driver: webdriver.Chrome):
     driver.get("https://www.instacart.ca/store/account")
+    time.sleep(5)
+    if (driver.current_url == "https://www.instacart.ca/store/account"):
+        return
     email = os.getenv("INSTACART_EMAIL")
     if (email): # If not defined, you can login manually
         email_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Email']")))
