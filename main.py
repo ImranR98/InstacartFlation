@@ -123,9 +123,9 @@ def get_order_details(driver: webdriver.Chrome, order_url: str):
 
 def item_info_div_to_dict(item_info_div):
     item_thumbnail_url = item_info_div.find_element(By.XPATH, "./div[1]/button/span/img").get_attribute("src")
-    item_name = item_info_div.find_element(By.XPATH, "./div[1]/div/button/span").text
+    item_name = item_info_div.find_element(By.XPATH, "./div[1]/div/div/button/span").text
     item_unit_info = [s.strip() for s in item_info_div.find_element(By.XPATH, "./div[1]/div/p").text.split("•")]
-    item_quantity = item_info_div.find_element(By.XPATH, "./div[2]/p").text
+    item_quantity = item_info_div.find_element(By.XPATH, "./div[1]/div/div/div/div/p").text
     item_unit_price = item_unit_info[0][1:]
     item_unit_description = item_unit_info[1]
     return {
