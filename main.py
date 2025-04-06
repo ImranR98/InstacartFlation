@@ -88,15 +88,15 @@ def order_info_div_to_dict(order_info_div):
     order_url_p = order_info_div.find_element(By.XPATH, "./div[2]/a")
     order_url = order_url_p.get_attribute("href")
     order_details_div = order_url_p.find_element(By.XPATH, '../../div[1]')
-    order_date_text = convert_datetime(' '.join(order_details_div.find_element(By.XPATH, "./div[1]/p[2]").text.split()[1:]))
-    order_item_count_text = order_details_div.find_element(By.XPATH, "./div[2]/p[2]").text
+    order_date_text = convert_datetime(' '.join(order_details_div.find_element(By.XPATH, "./div[1]/p[1]").text.split()[1:]))
+    order_item_count_text = order_details_div.find_element(By.XPATH, "./div[2]/p[1]").text
     cancelled = False
     try:
         order_details_div.find_element(By.XPATH, "./div[1]/p[3]").text
         cancelled = True
     except:
         pass
-    order_total_text = order_details_div.find_element(By.XPATH, "./div[3]/p[2]").text[1:]
+    order_total_text = order_details_div.find_element(By.XPATH, "./div[3]/p[1]").text[1:]
     return {
         "dateTime": order_date_text,
         "itemCount": order_item_count_text,
