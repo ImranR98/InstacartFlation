@@ -50,12 +50,6 @@ def login(driver: webdriver.Chrome):
     time.sleep(5)
     if (driver.current_url == "https://www.instacart.ca/store/account"):
         return
-    email = os.getenv("INSTACART_EMAIL")
-    if (email): # If not defined, you can login manually
-        email_input = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Email']")))
-        continue_button = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button/span[text()='Continue']")))
-        email_input.send_keys(email)
-        continue_button.click()
     WebDriverWait(driver, 3600).until(EC.url_changes(driver.current_url)) # Long timeout needed for the rest of the login process to be done manually
 
 def get_orders_list(driver: webdriver.Chrome, after_str=None):
