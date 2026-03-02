@@ -57,6 +57,7 @@ def get_orders_list(driver: webdriver.Chrome, after_str=None):
     # Keep clicking "load more orders" until no more can be loaded    
     while click_load_more():
         if after_str is not None:
+            time.sleep(5)            
             last_item_date = order_info_div_to_dict(driver.find_elements(By.XPATH, "//div[@class=\"e-undqvw\"]").pop())["dateTime"]
             if not is_web_date_greater(after_str, last_item_date):
                 break
