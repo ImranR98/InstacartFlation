@@ -1,7 +1,6 @@
 import os
 import json
 from dotenv import load_dotenv
-import tkinter as tk
 from datetime import datetime
 import argparse
 import random
